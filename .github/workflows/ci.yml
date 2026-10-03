@@ -1,0 +1,50 @@
+
+name: Generative control verification
+
+on: [push, pull_request]
+
+permissions:
+  contents: read
+
+jobs:
+  train-and-evaluate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: pip install -e . pytest
+      - run: pytest -q
+      - name: Train BC, diffusion, and flow-matching policies
+        run: |
+          flowctrl-experiment \
+            --demos 100 \
+            --eval-episodes 30 \
+            --max-iter 60 \
+            --seed 7 \
+            --out artifacts/results.json
+      - name: Validate experiment outputs
+        run: |
+          python - <<'PY'
+          import json
+          r=json.load(open("artifacts/results.json"))
+          assert r["dataset"]["expert_success_rate"] >= 0.95
+          assert set(r["models"]) == {"behavior_cloning","diffusion","flow_matching"}
+          for model, block in r["models"].items():
+              for condition in ("nominal","perturbed"):
+                  x=block[condition]
+                  assert 0.0 <= x["success_rate"] <= 1.0
+                  assert 0.0 <= x["collision_episode_rate"] <= 1.0
+                  assert x["mean_action_smoothness"] >= 0.0
+                  assert x["episodes"] == 30
+          assert r["models"]["diffusion"]["nominal"]["success_rate"] > 0.20
+          assert r["models"]["flow_matching"]["nominal"]["success_rate"] > 0.20
+          print("trained generative control policies verified")
+          PY
+      - run: flowctrl-report artifacts/results.json --out artifacts/summary.md
+      - uses: actions/upload-artifact@v4
+        with:
+          name: policy-evaluation
+          path: artifacts/

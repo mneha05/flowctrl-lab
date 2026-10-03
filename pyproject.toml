@@ -1,0 +1,24 @@
+
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "flowctrl-lab"
+version = "0.1.0"
+description = "Diffusion, flow matching, and behavior cloning for multimodal robot-control imitation learning"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "scikit-learn>=1.5"
+]
+
+[project.scripts]
+flowctrl-experiment = "flowctrl.experiment:main"
+flowctrl-report = "flowctrl.report:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
