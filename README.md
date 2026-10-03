@@ -1,5 +1,7 @@
 # FlowCtrl Lab
 
+[![Generative control verification](https://github.com/mneha05/flowctrl-lab/actions/workflows/ci.yml/badge.svg)](https://github.com/mneha05/flowctrl-lab/actions/workflows/ci.yml)
+
 **Diffusion models, conditional flow matching, and behavior cloning for multimodal robot-control imitation learning.**
 
 FlowCtrl Lab is a compact research-style control project designed around one question:
@@ -9,6 +11,23 @@ FlowCtrl Lab is a compact research-style control project designed around one que
 The task is a **simulated planar manipulation environment**: a point end-effector acquires a puck and moves it to a goal while routing around an obstacle. Expert demonstrations deliberately contain two legitimate modes—**above** or **below** the obstacle—so the dataset is multimodal rather than a single averaged trajectory.
 
 This is simulated control research. It does **not** claim physical-robot deployment or real-world sim-to-real transfer.
+
+## Verified experiment
+
+GitHub Actions run [#37084299618](https://github.com/mneha05/flowctrl-lab/actions/runs/37084299618) trained all three policies from **100 expert demonstrations / 2,284 state-action pairs** and evaluated **30 nominal + 30 perturbed closed-loop episodes per policy**.
+
+The expert demonstration set had **100.0% task success** with both upper and lower obstacle routes represented.
+
+| policy | condition | success | collision episodes | action smoothness | mean safety margin | successful upper/lower routes |
+|---|---|---:|---:|---:|---:|---:|
+| behavior cloning | nominal | **86.7%** | 0.0% | 0.0192 | 0.2749 | 16 / 10 |
+| behavior cloning | perturbed | **76.7%** | 0.0% | 0.0192 | 0.2686 | 11 / 12 |
+| diffusion | nominal | **60.0%** | 3.3% | 0.0659 | 0.2723 | 14 / 4 |
+| diffusion | perturbed | **73.3%** | 10.0% | 0.0634 | 0.2064 | 13 / 9 |
+| flow matching | nominal | **73.3%** | 0.0% | 0.0528 | 0.2360 | 8 / 14 |
+| flow matching | perturbed | **70.0%** | 6.7% | 0.0512 | 0.2572 | 7 / 14 |
+
+The result is intentionally reported as measured: in this small experiment the deterministic BC baseline has the highest nominal success, while both stochastic generative policies still recover successful trajectories in both demonstration modes. The workflow uploads the full JSON results and Markdown evaluation summary as the `policy-evaluation` artifact.
 
 ## Three policies, same demonstrations
 
